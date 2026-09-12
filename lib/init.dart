@@ -17,7 +17,6 @@ import 'package:venera/network/app_dio_io.dart';
 import 'package:venera/network/cookie_jar.dart';
 import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/follow_updates_page.dart';
-import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/app_links.dart';
 import 'package:venera/utils/handle_notification_route.dart';
 import 'package:venera/utils/handle_text_share.dart';
@@ -171,10 +170,8 @@ Future<void> _checkAppUpdates() async {
     unawaited(ComicSourcePage.checkComicSourceUpdate());
   }
 
-  // App update check runs on each startup when enabled.
-  if (appdata.settings['checkUpdateOnStart'] == true) {
-    await checkUpdateUi(false, false);
-  }
+  // In-app update checking is disabled in this project; it only ships the
+  // version built from this repository.
 }
 
 void checkUpdates() {

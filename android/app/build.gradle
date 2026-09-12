@@ -27,20 +27,22 @@ if (flutterVersionName == null) {
 
 def keystorePropertiesFile = rootProject.file("key.properties")
 def keystoreProperties = new Properties()
-if (!keystorePropertiesFile.exists()) {
-    throw new GradleException("Missing android/key.properties for release signing")
-}
-keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-["storeFile", "storePassword", "keyAlias", "keyPassword"].each { key ->
-    def value = keystoreProperties[key]
-    if (value == null || value.toString().trim().isEmpty()) {
-        throw new GradleException("Missing android/key.properties value: ${key}")
+def hasReleaseKeystore = keystorePropertiesFile.exists()
+if (hasReleaseKeystore) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    ["storeFile", "storePassword", "keyAlias", "keyPassword"].each { key ->
+        def value = keystoreProperties[key]
+        if (value == null || value.toString().trim().isEmpty()) {
+            throw new GradleException("Missing android/key.properties value: ${key}")
+        }
     }
 }
-def releaseStoreFile = rootProject.file(keystoreProperties["storeFile"])
-if (!releaseStoreFile.exists()) {
+def releaseStoreFile = hasReleaseKeystore ? rootProject.file(keystoreProperties["storeFile"]) : null
+if (hasReleaseKeystore && !releaseStoreFile.exists()) {
     throw new GradleException("Missing Android release keystore file: ${releaseStoreFile}")
 }
+// Without android/key.properties (CI / local dev builds), fall back to the
+// default debug keystore so the app still builds and runs.
 
 android {
     namespace = "io.github.kyosee.venera"
@@ -71,22 +73,18 @@ android {
     }
 
     signingConfigs {
-        debug {
-            storeFile releaseStoreFile
-            storePassword keystoreProperties['storePassword']
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-        }
         release {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile releaseStoreFile
-            storePassword keystoreProperties['storePassword']
+            if (hasReleaseKeystore) {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile releaseStoreFile
+                storePassword keystoreProperties['storePassword']
+            }
         }
     }
 
     defaultConfig {
-        applicationId = "io.github.kyosee.venera"
+        applicationId = "io.github.kyosee.venera.auto"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdk = flutter.minSdkVersion
@@ -104,7 +102,11 @@ android {
             ndk {
                 abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
             }
-            signingConfig signingConfigs.release
+            // Release builds are NOT signed automatically by Gradle; without
+            // key.properties fall back to the debug keystore so the APK stays
+            // installable (unlike debug builds, "no signing config" here means
+            // an unsigned APK that Android refuses to install).
+            signingConfig hasReleaseKeystore ? signingConfigs.release : signingConfigs.debug
         }
         debug {
             ndk {

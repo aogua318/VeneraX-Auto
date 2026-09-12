@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:venera/foundation/appdata.dart';
+import 'package:venera/pages/bookshelf_page.dart';
 import 'package:venera/pages/categories_page.dart';
 import 'package:venera/pages/comic_details_page/comic_page.dart';
 import 'package:venera/pages/random_comic_draw_dialog.dart';
@@ -49,6 +50,9 @@ class _MainPageState extends State<MainPage> {
 
   final _pages = [
     const HomePage(),
+    const BookshelfPage(
+      key: PageStorageKey('bookshelf'),
+    ),
     const FavoritesPage(key: PageStorageKey('favorites')),
     const ExplorePage(key: PageStorageKey('explore')),
     const CategoriesPage(key: PageStorageKey('categories')),
@@ -67,6 +71,11 @@ class _MainPageState extends State<MainPage> {
           label: 'Home'.tl,
           icon: Icons.home_outlined,
           activeIcon: Icons.home,
+        ),
+        PaneItemEntry(
+          label: 'Bookshelf'.tl,
+          icon: Icons.book_outlined,
+          activeIcon: Icons.book,
         ),
         PaneItemEntry(
           label: 'Favorites'.tl,

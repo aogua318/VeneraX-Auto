@@ -370,6 +370,17 @@ class Settings with ChangeNotifier {
     'blockedCommentWords': [],
     'defaultSearchTarget': null,
     'autoPageTurningInterval': 5, // in seconds
+    'autoScrollMsPerScreen':
+        5000, // milliseconds to scroll one screen height in continuous mode
+    'autoScrollOnChapterEnd': 'stop', // stop, nextChapter
+    'autoScrollResumeAfterTouch': false,
+    'autoPlayMode': 'smoothScroll', // smoothScroll, pageTurning
+    // Next page behavior in continuous mode: 'page' jumps to the next page
+    // head (tap/volume/keys share the same logic), 'distance' scrolls by a
+    // fixed distance (`continuousScrollDistance` percent of the viewport).
+    'continuousNextPageMode': 'page', // page, distance
+    'continuousScrollDistance': 50, // 10 - 100 (% of one screen)
+    'inputKeyMap': <String, String>{}, // "source:keyCode" -> InputAction name
     'readerMode': 'galleryLeftToRight', // values of [ReaderMode]
     'enableContinuousChapterReading': true,
     'readerScreenPicNumberForLandscape': 1, // 1 - 5
@@ -396,7 +407,7 @@ class Settings with ChangeNotifier {
     'minimizeToTray': false, // Windows 关闭窗口时最小化到系统托盘
     'enableLongPressToZoom': true,
     'longPressZoomPosition': "press", // press, center
-    'checkUpdateOnStart': true,
+    // In-app app-update checking is disabled in this project.
     'autoCleanHistoryDays': '0', // retention days; '0' keeps history forever
     'limitImageWidth': true,
     // Image width as a percentage of viewport height when limitImageWidth is on

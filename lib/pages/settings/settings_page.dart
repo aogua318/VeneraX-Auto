@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:async';
-import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_reorderable_grid_view/widgets/reorderable_builder.dart';
@@ -28,7 +27,6 @@ import 'package:venera/foundation/launcher_icon.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/foundation/tray.dart';
-import 'package:venera/network/app_dio.dart';
 import 'package:venera/pages/app_lock_setup.dart';
 import 'package:venera/pages/disclaimer.dart';
 import 'package:venera/pages/guide_page.dart';
@@ -37,8 +35,8 @@ import 'package:venera/pages/webdav_libraries_page.dart';
 import 'package:venera/utils/app_lock.dart';
 import 'package:venera/utils/data.dart';
 import 'package:venera/utils/data_sync.dart';
+import 'package:venera/utils/hardware_keys.dart';
 import 'package:venera/utils/io.dart';
-import 'package:venera/utils/platform_abi.dart';
 import 'package:venera/utils/sync_config_transfer.dart';
 import 'package:venera/utils/translations.dart';
 

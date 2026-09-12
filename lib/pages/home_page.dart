@@ -1190,12 +1190,18 @@ class _ImportComicsWidgetState extends State<ImportComicsWidget> {
       "Select a folder; single/multiple will be detected.".tl,
       "Select an EhViewer database and a download folder.".tl,
       "Scan the current local path and restore the local database.".tl,
+      "Select one archive (cbz, zip, 7z, cb7); nested folders become chapters.".tl,
+      "Select a folder of archives; each archive is imported as one comic.".tl,
+      "Select a folder; each subfolder becomes a chapter of one comic.".tl,
     ][type];
     List<String> importMethods = [
       "Import files".tl,
       "Import folder".tl,
       "EhViewer downloads".tl,
       "Restore local downloads".tl,
+      "Import single archive file".tl,
+      "Import multiple archive files".tl,
+      "Import folder (including sub-chapters)".tl,
     ];
 
     return ContentDialog(
@@ -1212,7 +1218,7 @@ class _ImportComicsWidgetState extends State<ImportComicsWidget> {
               onChanged: (value) {
                 setState(() {
                   type = value ?? type;
-                  if (type >= 2) {
+                  if (type == 2 || type == 3) {
                     selectedFolder = null;
                   }
                 });
@@ -1228,7 +1234,7 @@ class _ImportComicsWidgetState extends State<ImportComicsWidget> {
                       value: index,
                     );
                   }),
-                  if (type == 0 || type == 1)
+                  if (type == 0 || type == 1 || type >= 4)
                     ListTile(
                       title: Text("Add to favorites".tl),
                       trailing: Select(
@@ -1242,7 +1248,9 @@ class _ImportComicsWidgetState extends State<ImportComicsWidget> {
                         },
                       ),
                     ).paddingHorizontal(8),
-                  if (!App.isIOS && !App.isMacOS && (type == 0 || type == 1))
+                  if (!App.isIOS &&
+                      !App.isMacOS &&
+                      (type == 0 || type == 1 || type >= 4))
                     CheckboxListTile(
                       enabled: true,
                       title: Text("Copy to app local path".tl),
@@ -1311,6 +1319,9 @@ class _ImportComicsWidgetState extends State<ImportComicsWidget> {
         1 => await _importFolderWithConfirm(importer),
         2 => await importer.ehViewer(),
         3 => await importer.localDownloads(),
+        4 => await importer.cbz(),
+        5 => await importer.multipleCbz(),
+        6 => await importer.directory(true),
         int() => true,
       };
     } finally {

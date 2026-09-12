@@ -1,56 +1,48 @@
 <div align="center">
-  <img src="assets/new_logo.png" width="180" alt="VeneraX" />
-  <h1>VeneraX</h1>
+  <img src="assets/new_logo.png" width="180" alt="VeneraX Auto" />
+  <h1>VeneraX Auto</h1>
 
 [![Flutter](https://img.shields.io/badge/flutter-3.44.3-blue)](https://flutter.dev/)
-![AI-Driven](https://img.shields.io/badge/AI--Driven-Claude%20|%20Codex%20|%20DeepSeek-6e47ff)
 [![License](https://img.shields.io/github/license/Kyosee/VeneraX)](https://github.com/Kyosee/VeneraX/blob/master/LICENSE)
-[![Stars](https://img.shields.io/github/stars/Kyosee/VeneraX?style=flat)](https://github.com/Kyosee/VeneraX/stargazers)
-[![Release](https://img.shields.io/github/v/release/Kyosee/VeneraX)](https://github.com/Kyosee/VeneraX/releases)
+[![Upstream](https://img.shields.io/badge/fork%20of-Kyosee%2FVeneraX-6e47ff)](https://github.com/Kyosee/VeneraX)
 
   <h3>中文 | <a href="README_EN.md">English</a></h3>
 </div>
 
-VeneraX 是一个 Fork 自 Venera 并在原版基础上进行维护与增强，免费开源的多平台漫画阅读应用。
+VeneraX Auto 是一个基于 VeneraX 的二次修改版，免费开源的多平台漫画阅读应用，Android 端包名为 `io.github.kyosee.venera.auto`，可与官方 VeneraX 共存安装、互不影响。
 
-> **原始项目：** 本项目 fork 自 [venera-app/venera](https://github.com/venera-app/venera)。
+> **原始项目：** 本项目 fork 自 [Kyosee/VeneraX](https://github.com/Kyosee/VeneraX)；VeneraX 基于 [venera-app/venera](https://github.com/venera-app/venera)。本项目遵循原声明第七条，以可区分的名称（VeneraX Auto）发布。
 
 > [!IMPORTANT]
 > **在下载、安装或使用本软件前，请务必仔细阅读并充分理解[《用户协议与免责声明》](#用户协议与免责声明)的全部内容。** 您一旦下载、安装、复制、修改或使用本软件，即视为已阅读、理解并同意接受该声明的全部内容；如不同意，请勿使用并立即删除本软件。
 
-## 新功能&优化
+## 相对 VeneraX 新增的功能
 
-- [x] WebDAV 备份与同步优化
-- [x] Windows 与 Android APK 自动检查更新
-- [x] 连续章节无缝阅读
-- [x] 本地、追更、收藏优化
-- [x] 新增任务功能，支持后台执行任务及相关视图界面
-- [x] 章节阅读状态变更
-- [x] 夜览模式
-- [x] 支持 Android 端后台下载、追更检查、导入/导出漫画
-- [x] 支持 Windows 端托盘最小化
-- [x] 简易画质增强功能
-- [x] 部分 UI 及使用体验调整优化
-- [x] 稍后阅读功能
-- [x] 支持自定义自动清理历史记录
-- [x] 支持多设备通过扫码方式快速同步webdav配置信息
-- [x] 支持主界面长按自定义功能区排序
-- [x] 支持多库管理
-- [x] WebDAV 漫画库（实验性）
-- [x] 应用锁新增 PIN 码、密码、手势解锁
-- [x] 阅读时 AI 翻译（实验性）：图片与 OCR 均在本机处理，仅将识别文字发送到用户自行配置的 LLM；服务商支持新手模板/模型拉取与高级自定义，提供省资源、均衡、快速档位，支持整章预翻译、智能消字与受限区域嵌字
-- [x] 自定义合集：把分卷、分部发布的多本漫画合成一本阅读，可跨来源
+- [x] 平滑自动滚动：连续阅读模式下恒速滚动，速度按"每屏毫秒数"设定，支持触摸暂停/恢复、章末停止或续滚、屏幕常亮
+- [x] 外设按键映射（Android）：手柄 / DPAD / 键盘 / 媒体键（耳机线控）映射为翻页、翻章、开关自动滚动等阅读动作，支持自定义绑定
+- [x] 按键调速：映射"加快/减慢自动滚动"，每次 ±100ms 即时生效
+- [x] 下一页行为设置：整页跳转（页首对齐，点按/音量键/按键/定时翻页共用同一逻辑）或固定距离滚动（可设 10%–100% 屏高）
+- [x] 独立书架：与收藏夹并列的漫画列表，支持列表/网格/瀑布流三种视图与加入时间/名称/最近阅读排序
+- [x] 漫画合并：书架内多选本地漫画，拖拽排序后合并为一本，每本源漫画成为一个章节，文件直接移动不占双倍空间
+- [x] 章末自动切本：翻章、音量键、悬浮按钮、首/末页、自动滚动到章末时，若无上/下一章则自动切换到书架中的上/下一本
+- [x] 导入增强：新增"导入单个归档文件""导入多个归档文件""导入文件夹（包括小章节）"三个选项，归档/文件夹内的嵌套目录自动识别为章节
+- [x] 本地漫画多选菜单新增"加入书架"
+
+VeneraX 自身的全部功能（AI 翻译、跨源聚合、后台任务、WebDAV 等）均保留，详见[上游 VeneraX 的 README](https://github.com/Kyosee/VeneraX)。
 
 ## 使用说明
 
 各功能的配置步骤与操作方式详见 **[使用说明](doc/guide.zh.md)**。应用内亦可查阅：设置 → 关于 → 使用说明。
+
+> [!NOTE]
+> 本项目已**禁用应用内检查更新**：应用只负责当前构建的版本，不检查、不提示、不下载任何更新。了解上游 VeneraX 的动态请前往其 [GitHub 仓库](https://github.com/Kyosee/VeneraX)（应用内"关于"页的"仓库"入口同样跳转到上游）。
 
 ## 构建
 
 <details>
 <summary><b>本地构建</b></summary>
 
-1. 安装 [Flutter](https://flutter.dev/docs/get-started/install)
+1. 安装 **Flutter 3.44.3**（本项目锁定该版本，其他版本可能因 Gradle/Kotlin 插件要求不同而无法构建）
 2. 克隆仓库，执行 `flutter pub get`
 3. 按平台构建：
 
@@ -61,47 +53,7 @@ flutter build linux      # Linux
 flutter build macos      # macOS
 ```
 
-Android 需要先准备签名密钥，见下一节的「Android 签名」。
-
-</details>
-
-<details>
-<summary><b>在自己的 GitHub 上构建</b></summary>
-
-fork 本仓库后可以直接用 GitHub Actions 出安装包，不必配置本地环境。
-
-**1. 启用 Actions**
-
-fork 出来的仓库默认停用工作流，进 Actions 页点一下按钮启用。
-
-**2. 构建单个平台**
-
-Actions → **Build ALL** → Run workflow → 在 platform 里选 `windows` / `linux` / `macos` / `ios` / `android`，跑完在这次 run 的 Artifacts 里下载。
-
-Windows、Linux、macOS、iOS 不需要任何配置就能构建，但产物没有签名：
-
-- iOS 是未签名 ipa，需要自行签名后侧载。
-- macOS 是未签名、未公证的 dmg，首次打开要右键 → 打开。
-
-**3. Android 签名**
-
-Android 必须自己准备签名密钥，否则构建会直接失败。生成密钥：
-
-```bash
-keytool -genkey -v -keystore venera.jks -keyalg RSA -keysize 2048 -validity 10000 -alias venera
-base64 -w0 venera.jks    # macOS 用 base64 -i venera.jks
-```
-
-在仓库 Settings → Secrets and variables → Actions 添加 4 个 secret：
-
-| 名称 | 内容 |
-| --- | --- |
-| `ANDROID_KEYSTORE_BASE64` | 上一步 base64 的输出 |
-| `ANDROID_KEYSTORE_PASSWORD` | keystore 密码 |
-| `ANDROID_KEY_ALIAS` | 别名，上例为 `venera` |
-| `ANDROID_KEY_PASSWORD` | key 密码 |
-
-本地构建则把同样的信息写进 `android/key.properties`（该文件不会被提交）：
+**Android 签名：** 未配置 `android/key.properties` 时，构建脚本自动回退使用 debug 密钥签名（可直接安装，但与官方版签名不同）；需要正式签名时，将签名信息写入 `android/key.properties`（该文件不会被提交）：
 
 ```properties
 storeFile=/绝对路径/venera.jks
@@ -110,36 +62,15 @@ keyAlias=venera
 keyPassword=你的 key 密码
 ```
 
-**注意：** 自己签名的 APK 与本仓库发布版签名不同，无法覆盖安装，需要先卸载。卸载会清除应用数据，请先在应用内导出备份。
-
-**4. 改掉检查更新指向的仓库**
-
-如果要把构建产物分发出去，必须先改 [`lib/pages/settings/about.dart`](lib/pages/settings/about.dart) 开头的两个常量：
-
-```dart
-const kUpdateRepoOwner = 'Kyosee';
-const kUpdateRepoName = 'VeneraX';
-```
-
-改成自己的用户名和仓库名。检查更新、下载更新包、更新日志、关于页的仓库链接都由这两个常量决定。
-
-不改会有两个后果：应用启动时（「启动时检查更新」默认开启）会去查本仓库的最新版本，自己发的版本永远不会被检测到；Windows 上用户点「立即更新」会直接把本仓库的产物覆盖安装上去，等于把自己的版本换成了本仓库的版本。
-
-**5. 打 tag 自动发布（可选）**
-
-推送 `v*` tag 会触发全平台构建并创建 Release，fork 后需要先处理三处：
-
-- `release-notes/<tag>.en.md` 和 `release-notes/<tag>.zh-CN.md` 必须存在且非空。
-- tag 必须等于 `v` 加 `pubspec.yaml` 里的版本号（不含 `+` 之后的部分）。
-- Android 构建里的 `Verify Android signature continuity` 会比对上一个 Release 的 APK 签名。fork 仓库没有历史 Release，这一步必然失败，而 Release 依赖全部平台构建成功，一个失败就不会产出任何文件——首次发布前请删掉这一步。
-
-另外，两个 `Update_AltStore_*` 任务会把 AltStore 清单自动提交回 master，不需要可以删除；私有仓库可能拿不到 `ubuntu-22.04-arm` runner 而一直排队，可删除 `Build_Linux_ARM64`。
+**Windows 本机构建提示：** 若 pub 缓存（通常在 C 盘）与项目目录不在同一磁盘分区，Kotlin 增量编译可能失败，项目已在 `android/gradle.properties` 中设置 `kotlin.incremental=false` 规避；项目路径包含非 ASCII 字符时已设置 `android.overridePathCheck=true`。
 
 </details>
 
-## 迁移提示
+## 迁移与共存提示
 
-从 [venera-app/venera](https://github.com/venera-app/venera) 迁移时，请为 WebDAV 同步指定独立目录，不要与原项目共用。迁移前建议备份旧数据。
+- 本项目与官方 VeneraX 包名不同，可共存安装，应用数据互相隔离。
+- 从 VeneraX 迁移数据请使用应用内 WebDAV 备份/恢复，并为同步指定独立目录，不要与官方版共用。
+- 迁移前建议在原应用内导出本地备份。
 
 ## 用户协议与免责声明
 
@@ -194,13 +125,3 @@ const kUpdateRepoName = 'VeneraX';
 1. 禁止在各类公开/官方平台及官方账号区域（包括但不限于微博、微信公众号、X 等）宣传或推广本项目。
 2. 本软件依据仓库根目录 LICENSE 文件所载许可证授权分发；本声明不修改、不限制该许可证授予的权利，如两者存在冲突，以许可证为准。
 3. 一旦下载、复制、修改或使用本项目，即视为已阅读并接受本声明的全部内容。本项目维护者保留随时修改或补充本声明的权利，修改后的声明自发布时生效。
-
-## Star History
-
-<a href="https://www.star-history.com/?type=date&repos=Kyosee%2FVeneraX">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Kyosee/VeneraX&type=date&theme=dark&legend=top-left&sealed_token=t_CyvEveWN9HuG5CZb1KoUGGLxlcTA0a5341bBCAAV63Hh34aiVyEOvU9gpq1q9Wvcw48bzlVHPdlWQ5s-tz-bn9iq8_TBG0oU-Zk7CFAb_Pf7SqzE9J0eEazga6bCemssv2kIYq-9xlbymcG6S000iehp3Zs_TRV73aoOaEMv7pZP-qrRwaP6a7vuB1" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Kyosee/VeneraX&type=date&legend=top-left&sealed_token=t_CyvEveWN9HuG5CZb1KoUGGLxlcTA0a5341bBCAAV63Hh34aiVyEOvU9gpq1q9Wvcw48bzlVHPdlWQ5s-tz-bn9iq8_TBG0oU-Zk7CFAb_Pf7SqzE9J0eEazga6bCemssv2kIYq-9xlbymcG6S000iehp3Zs_TRV73aoOaEMv7pZP-qrRwaP6a7vuB1" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Kyosee/VeneraX&type=date&legend=top-left&sealed_token=t_CyvEveWN9HuG5CZb1KoUGGLxlcTA0a5341bBCAAV63Hh34aiVyEOvU9gpq1q9Wvcw48bzlVHPdlWQ5s-tz-bn9iq8_TBG0oU-Zk7CFAb_Pf7SqzE9J0eEazga6bCemssv2kIYq-9xlbymcG6S000iehp3Zs_TRV73aoOaEMv7pZP-qrRwaP6a7vuB1" />
- </picture>
-</a>

@@ -18,6 +18,7 @@ import 'package:venera/components/rich_comment_content.dart';
 import 'package:venera/components/window_frame.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
+import 'package:venera/foundation/bookshelf.dart';
 import 'package:venera/foundation/cache_manager.dart';
 import 'package:venera/foundation/chapter_duplicates.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
@@ -47,6 +48,7 @@ import 'package:venera/utils/clipboard_image.dart';
 import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/file_type.dart';
+import 'package:venera/utils/hardware_keys.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/memory_info.dart';
 import 'package:venera/utils/tags_translation.dart';
@@ -69,6 +71,8 @@ part 'loading.dart';
 part 'chapters.dart';
 
 part 'chapter_comments.dart';
+
+part 'auto_scroll.dart';
 
 @visibleForTesting
 SystemUiMode resolveReaderSystemUiMode(bool showSystemStatusBar) {
@@ -267,6 +271,10 @@ class _ReaderState extends State<Reader>
     )) {
       handleVolumeEvent();
     }
+    if (App.isAndroid) {
+      _hardwareKeyListener = HardwareKeyListener(onKey: handleHardwareKey)
+        ..listen();
+    }
     setImageCacheSize();
     Future.delayed(const Duration(milliseconds: 200), () {
       LocalFavoritesManager().onRead(cid, type);
@@ -357,12 +365,18 @@ class _ReaderState extends State<Reader>
     if (isFullscreen) {
       fullscreen();
     }
+    if (App.isAndroid && _keepScreenOn) {
+      // Restore the system screen timeout when leaving the reader.
+      _methodChannel.invokeMethod('setScreenOn', {'set': false});
+    }
     if (_updateHistoryTimer != null && history != null) {
       _updateHistoryTimer!.cancel();
       _updateHistoryTimer = null;
       unawaited(HistoryManager().addHistoryAsync(history!));
     }
     autoPageTurningTimer?.cancel();
+    _autoScrollActive = false;
+    _hardwareKeyListener?.cancel();
     focusNode.dispose();
     ImageTranslationService.instance.removeListener(_onPageTranslated);
     ImageTranslationService.instance.clearQueue();
@@ -481,14 +495,258 @@ class _ReaderState extends State<Reader>
   }
 
   void onKeyEvent(KeyEvent event) {
+    if (event is KeyDownEvent) {
+      var id = "fl:${event.logicalKey.keyId}";
+      var actionName = _inputKeyMap[id];
+      var action = actionName == null ? null : InputAction.tryParse(actionName);
+      if (action != null) {
+        handleInputAction(action);
+        return;
+      }
+    }
     if (event.logicalKey == LogicalKeyboardKey.f12 && event is KeyUpEvent) {
       fullscreen();
     }
     _imageViewController?.handleKeyEvent(event);
   }
 
+  bool _autoScrollActive = false;
+
+  HardwareKeyListener? _hardwareKeyListener;
+
+  /// Whether auto scroll should be resumed in the next chapter after it ends.
+  bool autoScrollResumeAfterChapter = false;
+
+  bool get isAutoScrolling => autoPageTurningTimer != null || _autoScrollActive;
+
+  static const _methodChannel = MethodChannel('venera/method_channel');
+
+  bool _keepScreenOn = false;
+
+  /// Keep the screen on while auto play (smooth scrolling or timed page
+  /// turning) is running, restore the system behavior when it stops.
+  @override
+  void _updateKeepScreenOn() {
+    var shouldKeep = _autoScrollActive || autoPageTurningTimer != null;
+    if (shouldKeep != _keepScreenOn) {
+      _keepScreenOn = shouldKeep;
+      if (App.isAndroid) {
+        _methodChannel.invokeMethod('setScreenOn', {'set': shouldKeep});
+      }
+    }
+  }
+
+  void setAutoScrollActive(bool value) {
+    if (_autoScrollActive != value) {
+      _autoScrollActive = value;
+      update();
+      _updateKeepScreenOn();
+    }
+  }
+
+  /// The effective key map. When the user has no custom bindings, fall back
+  /// to [defaultInputKeyMap] so hardware keys work out of the box.
+  Map<String, String> get _inputKeyMap {
+    var map = (appdata.settings['inputKeyMap'] as Map?)?.cast<String, String>();
+    if (map == null || map.isEmpty) {
+      return defaultInputKeyMap;
+    }
+    return map;
+  }
+
+  void handleHardwareKey(HardwareKey key) {
+    var actionName = _inputKeyMap[key.id];
+    if (actionName == null) return;
+    var action = InputAction.tryParse(actionName);
+    if (action != null) {
+      handleInputAction(action);
+    }
+  }
+
+  void handleInputAction(InputAction action) {
+    switch (action) {
+      case InputAction.nextPage:
+        // Same logic as tap / volume key page turning (turnPage), so all
+        // entry points share one behavior; at the end it falls back to
+        // chapter (then bookshelf neighbor) navigation.
+        if (!toNextPage()) {
+          toNextChapterOrComic();
+        }
+      case InputAction.prevPage:
+        if (!toPrevPage()) {
+          toPrevChapterOrComic(toLastPage: true);
+        }
+      case InputAction.toggleAutoScroll:
+        toggleAutoPlay();
+      case InputAction.nextChapter:
+        toNextChapterOrComic();
+      case InputAction.prevChapter:
+        toPrevChapterOrComic();
+      case InputAction.back:
+        if (App.rootContext.canPop()) {
+          App.rootContext.pop();
+        }
+      case InputAction.increaseScrollSpeed:
+        _adjustAutoScrollSpeed(-100);
+      case InputAction.decreaseScrollSpeed:
+        _adjustAutoScrollSpeed(100);
+    }
+  }
+
+  /// Change `autoScrollMsPerScreen` by [delta] ms (a smaller value means a
+  /// faster scroll). A running auto scroll picks up the new speed on its
+  /// next tick, no restart needed.
+  void _adjustAutoScrollSpeed(int delta) {
+    int current;
+    if (appdata.settings.isComicSpecificSettingsEnabled(cid, type.sourceKey)) {
+      current = appdata.settings.getReaderSetting(
+        cid,
+        type.sourceKey,
+        'autoScrollMsPerScreen',
+      );
+    } else {
+      current = appdata.settings['autoScrollMsPerScreen'];
+    }
+    var value = (current + delta).clamp(100, 600000);
+    if (value == current) {
+      return;
+    }
+    if (appdata.settings.isComicSpecificSettingsEnabled(cid, type.sourceKey)) {
+      appdata.settings.setReaderSetting(
+        cid,
+        type.sourceKey,
+        'autoScrollMsPerScreen',
+        value,
+      );
+    } else {
+      appdata.settings['autoScrollMsPerScreen'] = value;
+    }
+    appdata.saveData();
+    showToast(
+      context: App.rootContext,
+      message: "Auto scroll: @a ms per screen".tlParams({'a': value}),
+    );
+  }
+
+  /// Toggle auto play. In continuous mode the behavior depends on the
+  /// `autoPlayMode` setting: smooth scrolling or timed page turning.
+  void toggleAutoPlay() {
+    var isSmooth = mode.isContinuous &&
+        appdata.settings.getReaderSetting(cid, type.sourceKey, 'autoPlayMode') !=
+            'pageTurning';
+    if (isSmooth) {
+      var controller = _imageViewController;
+      if (controller is _ContinuousModeState) {
+        controller.toggleAutoScroll();
+      }
+    } else {
+      autoPageTurning(cid, type);
+    }
+  }
+
+  /// Switch to the previous chapter. Falls back to the previous comic in the
+  /// bookshelf when there is no previous chapter.
+  @override
+  Future<void> toPrevChapterOrComic({bool toLastPage = false}) async {
+    if (!toPrevChapter(toLastPage: toLastPage)) {
+      await toNeighborComic(false);
+    }
+  }
+
+  /// Switch to the next chapter. Falls back to the next comic in the
+  /// bookshelf when there is no next chapter.
+  @override
+  Future<void> toNextChapterOrComic() async {
+    if (!toNextChapter()) {
+      await toNeighborComic(true);
+    }
+  }
+
+  /// Switch to the previous or next comic in the bookshelf. Returns false if
+  /// the current comic is not in the bookshelf or there is no neighbor.
+  Future<bool> toNeighborComic(bool next) async {
+    var shelf = BookshelfManager().sortedItems();
+    var index = shelf.indexWhere((e) => e.id == cid && e.type == type);
+    if (index < 0) {
+      return false;
+    }
+    var targetIndex = next ? index + 1 : index - 1;
+    if (targetIndex < 0 || targetIndex >= shelf.length) {
+      showToast(
+        context: App.rootContext,
+        message: next ? "This is the last book".tl : "This is the first book".tl,
+      );
+      return false;
+    }
+    var entry = shelf[targetIndex];
+    var comic = entry.resolveComic();
+    if (comic == null) {
+      showToast(context: App.rootContext, message: "Comic not found".tl);
+      return false;
+    }
+    Widget page;
+    if (comic is LocalComic) {
+      var history = HistoryManager().find(comic.id, ComicType.local);
+      page = Reader(
+        type: ComicType.local,
+        cid: comic.id,
+        name: comic.title,
+        chapters: comic.chapters,
+        initialPage: history?.page,
+        initialChapter: history?.ep,
+        initialChapterGroup: history?.group,
+        history: history ?? History.fromModel(model: comic, ep: 0, page: 0),
+        author: comic.subTitle ?? '',
+        tags: comic.tags,
+      );
+    } else {
+      var source = entry.type.comicSource;
+      if (source?.loadComicInfo == null) {
+        showToast(context: App.rootContext, message: "Comic not found".tl);
+        return false;
+      }
+      var res = await source!.loadComicInfo!(entry.id);
+      if (res.error) {
+        showToast(context: App.rootContext, message: res.errorMessage ?? "Error");
+        return false;
+      }
+      var details = res.data;
+      var history = HistoryManager().find(entry.id, entry.type);
+      page = Reader(
+        type: entry.type,
+        cid: entry.id,
+        name: details.title,
+        chapters: details.chapters,
+        initialPage: history?.page,
+        initialChapter: history?.ep,
+        initialChapterGroup: history?.group,
+        history: history ?? History.fromModel(model: details, ep: 0, page: 0),
+        author: details.subTitle ?? '',
+        tags: details.tags.values.expand((e) => e).toList(),
+      );
+    }
+    App.rootContext.toReplacement(() => page);
+    return true;
+  }
+
   @override
   int get maxChapter => widget.chapters?.length ?? 1;
+
+  /// Whether the reader is on the very first page of the comic.
+  bool get isOnFirstPage => chapter == 1 && page == 1;
+
+  /// Whether the reader is on the very last page of the comic.
+  ///
+  /// In continuous mode the last page can not always be displayed fully, the
+  /// scroll position settles on the second-to-last page. Treat
+  /// `maxPage - 1` as the end in that case.
+  bool get isOnLastPage {
+    if (chapter != maxChapter) return false;
+    if (mode.isContinuous) {
+      return maxPage <= 1 ? page >= maxPage : page >= maxPage - 1;
+    }
+    return page == maxPage;
+  }
 
   /// 1-based chapters collapsed by this comic's "hide duplicate chapters"
   /// switch. Computed once: the switch lives on the details page, so it cannot
@@ -803,17 +1061,21 @@ abstract mixin class _VolumeListener {
 
   bool toPrevChapter({bool toLastPage = false});
 
+  Future<void> toNextChapterOrComic();
+
+  Future<void> toPrevChapterOrComic({bool toLastPage = false});
+
   VolumeListener? volumeListener;
 
   void onDown() {
     if (!toNextPage()) {
-      toNextChapter();
+      toNextChapterOrComic();
     }
   }
 
   void onUp() {
     if (!toPrevPage()) {
-      toPrevChapter(toLastPage: true);
+      toPrevChapterOrComic(toLastPage: true);
     }
   }
 
@@ -839,6 +1101,9 @@ abstract mixin class _VolumeListener {
 abstract mixin class _ReaderLocation {
   int _page = 1;
   int? _pendingPage;
+
+  /// Implemented by [_ReaderState]: keeps the screen on while auto play runs.
+  void _updateKeepScreenOn();
 
   /// Flag to indicate that the page should jump to the last page after images are loaded.
   bool _jumpToLastPageOnLoad = false;
@@ -1007,6 +1272,7 @@ abstract mixin class _ReaderLocation {
     if (autoPageTurningTimer != null) {
       autoPageTurningTimer!.cancel();
       autoPageTurningTimer = null;
+      _updateKeepScreenOn();
     } else {
       int interval = appdata.settings.getReaderSetting(
         cid,
@@ -1021,9 +1287,11 @@ abstract mixin class _ReaderLocation {
           if (!toNextChapter()) {
             autoPageTurningTimer?.cancel();
             autoPageTurningTimer = null;
+            _updateKeepScreenOn();
           }
         }
       });
+      _updateKeepScreenOn();
     }
   }
 }

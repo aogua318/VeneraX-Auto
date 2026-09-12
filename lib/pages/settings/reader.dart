@@ -502,6 +502,120 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             if ((_effectiveSetting('readerMode') as String?)
                     ?.startsWith('continuous') ??
                 false)
+              SelectSetting(
+                title: "Auto play mode".tl,
+                settingKey: "autoPlayMode",
+                optionTranslation: {
+                  "smoothScroll": "Smooth Scroll".tl,
+                  "pageTurning": "Timed Page Turning".tl,
+                },
+                onChanged: () {
+                  widget.onChanged?.call("autoPlayMode");
+                },
+                comicId: isEnabledSpecificSettings ? widget.comicId : null,
+                comicSource: isEnabledSpecificSettings
+                    ? widget.comicSource
+                    : null,
+                useDeviceSettings: useDeviceSpecificSettings,
+              ),
+            if ((_effectiveSetting('readerMode') as String?)
+                    ?.startsWith('continuous') ??
+                false)
+              _AutoScrollSpeedSetting(
+                onChanged: () {
+                  widget.onChanged?.call("autoScrollMsPerScreen");
+                },
+                comicId: isEnabledSpecificSettings ? widget.comicId : null,
+                comicSource: isEnabledSpecificSettings
+                    ? widget.comicSource
+                    : null,
+                useDeviceSettings: useDeviceSpecificSettings,
+              ),
+            if ((_effectiveSetting('readerMode') as String?)
+                    ?.startsWith('continuous') ??
+                false)
+              SelectSetting(
+                title: "Auto scroll at chapter end".tl,
+                settingKey: "autoScrollOnChapterEnd",
+                optionTranslation: {
+                  "stop": "Stop".tl,
+                  "nextChapter": "Continue with next chapter".tl,
+                },
+                onChanged: () {
+                  widget.onChanged?.call("autoScrollOnChapterEnd");
+                },
+                comicId: isEnabledSpecificSettings ? widget.comicId : null,
+                comicSource: isEnabledSpecificSettings
+                    ? widget.comicSource
+                    : null,
+                useDeviceSettings: useDeviceSpecificSettings,
+              ),
+            if ((_effectiveSetting('readerMode') as String?)
+                    ?.startsWith('continuous') ??
+                false)
+              _SwitchSetting(
+                title: "Resume auto scroll after touch".tl,
+                settingKey: "autoScrollResumeAfterTouch",
+                onChanged: () {
+                  widget.onChanged?.call("autoScrollResumeAfterTouch");
+                },
+                comicId: isEnabledSpecificSettings ? widget.comicId : null,
+                comicSource: isEnabledSpecificSettings
+                    ? widget.comicSource
+                    : null,
+                useDeviceSettings: useDeviceSpecificSettings,
+              ),
+            if ((_effectiveSetting('readerMode') as String?)
+                    ?.startsWith('continuous') ??
+                false)
+              SelectSetting(
+                title: "Next page behavior".tl,
+                settingKey: "continuousNextPageMode",
+                optionTranslation: {
+                  "page": "Page aligned jump".tl,
+                  "distance": "Fixed distance scroll".tl,
+                },
+                onChanged: () {
+                  widget.onChanged?.call("continuousNextPageMode");
+                },
+                comicId: isEnabledSpecificSettings ? widget.comicId : null,
+                comicSource: isEnabledSpecificSettings
+                    ? widget.comicSource
+                    : null,
+                useDeviceSettings: useDeviceSpecificSettings,
+              ),
+            if (((_effectiveSetting('readerMode') as String?)
+                        ?.startsWith('continuous') ??
+                    false) &&
+                (_effectiveSetting('continuousNextPageMode') as String?) ==
+                    'distance')
+              _SliderSetting(
+                title: "Next page scroll distance (%)".tl,
+                settingsIndex: "continuousScrollDistance",
+                interval: 5,
+                min: 10,
+                max: 100,
+                onChanged: () {
+                  setState(() {});
+                  widget.onChanged?.call("continuousScrollDistance");
+                },
+                comicId: isEnabledSpecificSettings ? widget.comicId : null,
+                comicSource: isEnabledSpecificSettings
+                    ? widget.comicSource
+                    : null,
+                useDeviceSettings: useDeviceSpecificSettings,
+              ),
+            if (App.isAndroid)
+              _CallbackSetting(
+                title: "Hardware Key Mapping".tl,
+                subtitle:
+                    "Map gamepad, keyboard and media keys to reader actions".tl,
+                callback: () => context.to(() => _KeyMappingPage()),
+                actionTitle: "Edit".tl,
+              ),
+            if ((_effectiveSetting('readerMode') as String?)
+                    ?.startsWith('continuous') ??
+                false)
               _SliderSetting(
                 title: "Mouse scroll speed".tl,
                 settingsIndex: "readerScrollSpeed",
@@ -1276,6 +1390,311 @@ class __CustomImageProcessingState extends State<_CustomImageProcessing> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Auto scroll speed setting: a slider plus a tappable value that opens a
+/// numeric input dialog (supports values beyond the slider range).
+class _AutoScrollSpeedSetting extends StatefulWidget {
+  const _AutoScrollSpeedSetting({
+    this.comicId,
+    this.comicSource,
+    required this.useDeviceSettings,
+    this.onChanged,
+  });
+
+  final String? comicId;
+
+  final String? comicSource;
+
+  final bool useDeviceSettings;
+
+  final VoidCallback? onChanged;
+
+  @override
+  State<_AutoScrollSpeedSetting> createState() =>
+      _AutoScrollSpeedSettingState();
+}
+
+class _AutoScrollSpeedSettingState extends State<_AutoScrollSpeedSetting> {
+  static const _sliderMin = 1000.0;
+
+  static const _sliderMax = 60000.0;
+
+  static const _inputMin = 100;
+
+  static const _inputMax = 600000;
+
+  int get _value {
+    int v;
+    if (widget.comicId != null) {
+      v = appdata.settings.getReaderSetting(
+        widget.comicId!,
+        widget.comicSource!,
+        'autoScrollMsPerScreen',
+      );
+    } else if (widget.useDeviceSettings) {
+      v = appdata.settings.getDeviceReaderSetting('autoScrollMsPerScreen');
+    } else {
+      v = appdata.settings['autoScrollMsPerScreen'];
+    }
+    return v;
+  }
+
+  void _set(int v) {
+    if (widget.comicId != null) {
+      appdata.settings.setReaderSetting(
+        widget.comicId!,
+        widget.comicSource!,
+        'autoScrollMsPerScreen',
+        v,
+      );
+    } else if (widget.useDeviceSettings) {
+      appdata.settings.setDeviceReaderSetting('autoScrollMsPerScreen', v);
+    } else {
+      appdata.settings['autoScrollMsPerScreen'] = v;
+    }
+    appdata.saveData();
+    widget.onChanged?.call();
+    setState(() {});
+  }
+
+  void _edit() {
+    var textController = TextEditingController(text: _value.toString());
+    showDialog(
+      context: context,
+      builder: (context) {
+        return ContentDialog(
+          title: "Auto scroll time per screen (ms)".tl,
+          content: TextField(
+            controller: textController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            autofocus: true,
+          ),
+          actions: [
+            Button.text(onPressed: () => context.pop(), child: Text("Cancel".tl)),
+            Button.filled(
+              onPressed: () {
+                var v = int.tryParse(textController.text);
+                if (v != null) {
+                  _set(v.clamp(_inputMin, _inputMax));
+                  context.pop();
+                }
+              },
+              child: Text("Confirm".tl),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var sliderValue = _value.toDouble().clamp(_sliderMin, _sliderMax);
+    return ListTile(
+      title: Text(
+        "Auto scroll time per screen (ms)".tl,
+        softWrap: true,
+        maxLines: 2,
+      ),
+      subtitle: Slider(
+        value: sliderValue,
+        min: _sliderMin,
+        max: _sliderMax,
+        onChanged: (v) {
+          _set(v.toInt());
+        },
+      ),
+      trailing: InkWell(
+        borderRadius: BorderRadius.circular(4),
+        onTap: _edit,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("$_value ms", style: ts.s12),
+            Icon(Icons.edit, size: 14, color: context.colorScheme.outline),
+          ],
+        ).paddingHorizontal(4),
+      ),
+    );
+  }
+}
+
+class _KeyMappingPage extends StatefulWidget {
+  const _KeyMappingPage();
+
+  @override
+  State<_KeyMappingPage> createState() => _KeyMappingPageState();
+}
+
+class _KeyMappingPageState extends State<_KeyMappingPage> {
+  Map<String, String> get _map =>
+      (appdata.settings['inputKeyMap'] as Map?)?.cast<String, String>() ?? {};
+
+  void _save(Map<String, String> map) {
+    appdata.settings['inputKeyMap'] = map;
+    appdata.saveData();
+    setState(() {});
+  }
+
+  void _addBinding(InputAction action) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return _KeyCaptureDialog(
+          onKey: (key) {
+            var map = Map.of(_map);
+            // A key can only be bound to one action.
+            map.remove(key.id);
+            map[key.id] = action.name;
+            _save(map);
+          },
+        );
+      },
+    );
+  }
+
+  void _removeBinding(String keyId) {
+    var map = Map.of(_map);
+    map.remove(keyId);
+    _save(map);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: Appbar(title: Text("Hardware Key Mapping".tl), actions: [
+        TextButton(
+          onPressed: () {
+            _save(Map.of(defaultInputKeyMap));
+          },
+          child: Text("Reset".tl),
+        ),
+      ]),
+      body: ListView(
+        children: [
+          for (var action in InputAction.values)
+            ListTile(
+              title: Text(action.displayName.tl),
+              subtitle: _bindingsText(action),
+              onTap: () => _addBinding(action),
+              trailing: const Icon(Icons.add),
+            ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              "Tap an action and press any key on your gamepad, keyboard or media device to bind it. Tap a binding to remove it."
+                  .tl,
+              style: TextStyle(color: context.colorScheme.outline),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _bindingsText(InputAction action) {
+    var bindings = _map.entries
+        .where((e) => e.value == action.name)
+        .map((e) => parseHardwareKey(e.key)?.displayName ?? e.key)
+        .toList();
+    if (bindings.isEmpty) {
+      return Text(
+        "Not set".tl,
+        style: TextStyle(color: context.colorScheme.outline),
+      );
+    }
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      children: [
+        for (var binding in bindings)
+          ActionChip(
+            label: Text(binding, style: ts.s12),
+            onPressed: () {
+              var entry = _map.entries.firstWhere(
+                (e) =>
+                    e.value == action.name &&
+                    (parseHardwareKey(e.key)?.displayName ?? e.key) == binding,
+              );
+              _removeBinding(entry.key);
+            },
+          ),
+      ],
+    );
+  }
+}
+
+class _KeyCaptureDialog extends StatefulWidget {
+  const _KeyCaptureDialog({required this.onKey});
+
+  final void Function(HardwareKey key) onKey;
+
+  @override
+  State<_KeyCaptureDialog> createState() => _KeyCaptureDialogState();
+}
+
+class _KeyCaptureDialogState extends State<_KeyCaptureDialog> {
+  HardwareKeyListener? _hardwareKeyListener;
+  final _focusNode = FocusNode();
+
+  KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) {
+      return KeyEventResult.ignored;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.escape) {
+      Navigator.of(context).pop();
+      return KeyEventResult.handled;
+    }
+    Navigator.of(context).pop();
+    widget.onKey(HardwareKey.fromLogicalKey(event.logicalKey));
+    return KeyEventResult.handled;
+  }
+
+  void _onHardwareKey(HardwareKey key) {
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    widget.onKey(key);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (App.isAndroid) {
+      _hardwareKeyListener = HardwareKeyListener(onKey: _onHardwareKey)
+        ..listen();
+    }
+  }
+
+  @override
+  void dispose() {
+    _hardwareKeyListener?.cancel();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text("Press a key".tl),
+      content: Focus(
+        focusNode: _focusNode,
+        autofocus: true,
+        onKeyEvent: _onKeyEvent,
+        child: Text(
+          "Press any key on your gamepad, keyboard or media device to bind it. Press Escape to cancel."
+              .tl,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text("Cancel".tl),
+        ),
+      ],
     );
   }
 }

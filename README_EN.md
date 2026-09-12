@@ -1,57 +1,48 @@
 <div align="center">
-  <img src="assets/new_logo.png" width="180" alt="VeneraX" />
-  <h1>VeneraX</h1>
+  <img src="assets/new_logo.png" width="180" alt="VeneraX Auto" />
+  <h1>VeneraX Auto</h1>
 
 [![Flutter](https://img.shields.io/badge/flutter-3.44.3-blue)](https://flutter.dev/)
-![AI-Driven](https://img.shields.io/badge/AI--Driven-Claude%20|%20Codex%20|%20DeepSeek-6e47ff)
 [![License](https://img.shields.io/github/license/Kyosee/VeneraX)](https://github.com/Kyosee/VeneraX/blob/master/LICENSE)
-[![Stars](https://img.shields.io/github/stars/Kyosee/VeneraX?style=flat)](https://github.com/Kyosee/VeneraX/stargazers)
-[![Release](https://img.shields.io/github/v/release/Kyosee/VeneraX)](https://github.com/Kyosee/VeneraX/releases)
+[![Upstream](https://img.shields.io/badge/fork%20of-Kyosee%2FVeneraX-6e47ff)](https://github.com/Kyosee/VeneraX)
 
   <h3><a href="README.md">中文</a> | English</h3>
 </div>
 
-VeneraX is a free and open-source, multi-platform comic reader forked from Venera and maintained with enhancements over the original.
+VeneraX Auto is a free and open-source, multi-platform comic reader based on VeneraX. Its Android application ID is `io.github.kyosee.venera.auto`, so it can be installed alongside the official VeneraX without interference.
 
-> **Original Project:** This project is forked from [venera-app/venera](https://github.com/venera-app/venera).
+> **Original Project:** This project is forked from [Kyosee/VeneraX](https://github.com/Kyosee/VeneraX); VeneraX itself is based on [venera-app/venera](https://github.com/venera-app/venera). Following section 7 of the original disclaimer, this project is published under a distinguishable name (VeneraX Auto).
 
 > [!IMPORTANT]
 > **Before downloading, installing, or using this software, please read and fully understand the [User Agreement & Disclaimer](#user-agreement--disclaimer).** By downloading, installing, copying, modifying, or using this software, you are deemed to have read, understood, and accepted it in its entirety; if you do not agree, do not use the software and delete it immediately.
 
-## New Features & Improvements
+## Features Added on Top of VeneraX
 
-- [x] Improved WebDAV backup & sync
-- [x] Automatic update checks on Windows and Android APK
-- [x] Seamless continuous-chapter reading
-- [x] Improved local library, follow-updates & favorites
-- [x] Task system with background execution and related views
-- [x] Chapter read-status changes
-- [x] Reading background color (per-comic)
-- [x] Night-view mode (warm/black/dim-red overlay, adjustable intensity)
-- [x] Android background downloads, follow-update checks, comic import/export
-- [x] Windows tray minimize
-- [x] Simple image-quality enhancement
-- [x] Various UI & UX refinements
-- [x] Read-later
-- [x] Customizable automatic history cleanup
-- [x] Quick WebDAV config sync across devices via QR code
-- [x] Long-press to reorder the home screen's function modules
-- [x] Multiple library management
-- [x] WebDAV comic library (experimental)
-- [x] App lock adds PIN, password and pattern unlock
-- [x] AI page translation while reading (experimental): images and OCR stay on-device, and only recognized text is sent to an LLM you configure; beginner provider templates/model fetching plus advanced custom settings, resource-saving/balanced/fast presets, whole-chapter pre-translation, smart erase and bounded text layout
-- [x] Custom collections: read comics published as separate volumes or parts as one, across sources
+- [x] Smooth auto scroll: constant-speed scrolling in continuous reading mode, speed defined as milliseconds per screen, with touch pause/resume, chapter-end stop or continue, and keep-screen-on
+- [x] Hardware key mapping (Android): gamepad / DPAD / keyboard / media keys (headset controls) mapped to page turning, chapter switching, auto-scroll toggle and other reader actions, with custom bindings
+- [x] Key-bound speed control: "increase / decrease auto scroll speed" actions, ±100 ms per press, effective immediately
+- [x] Next-page behavior setting: page-aligned jump (tap / volume keys / hardware keys / timed turning all share one logic) or fixed-distance scroll (10%–100% of the viewport, configurable)
+- [x] Standalone bookshelf: a comic list alongside favorites, with list / grid / waterfall views and added-time / name / last-read sorting
+- [x] Comic merge: multi-select local comics in the bookshelf, drag to reorder and merge into one; each source comic becomes a chapter, files are moved directly without doubling disk usage
+- [x] Chapter-end auto switching: when there is no next/previous chapter, page turning, volume keys, floating buttons, first/last page buttons and auto scroll fall back to the next/previous comic in the bookshelf
+- [x] Import enhancements: three new options — "Import single archive file", "Import multiple archive files" and "Import folder (including sub-chapters)"; nested directories inside archives/folders are detected as chapters automatically
+- [x] "Add to bookshelf" entry in the local comics multi-select menu
+
+All VeneraX features (AI translation, cross-source aggregation, background tasks, WebDAV, etc.) are preserved; see the [upstream VeneraX README](https://github.com/Kyosee/VeneraX).
 
 ## Guide
 
 Setup steps and interactions for each feature are documented in the **[guide](doc/guide.en.md)**. It is also available in the app under Settings → About → Guide.
+
+> [!NOTE]
+> In-app update checking is **disabled** in this project: the app only ships the version it was built from, and never checks for, announces, or downloads updates. For upstream VeneraX news, visit its [GitHub repository](https://github.com/Kyosee/VeneraX) (the "Repository" entry on the About page also opens it).
 
 ## Building
 
 <details>
 <summary><b>Local build</b></summary>
 
-1. Install [Flutter](https://flutter.dev/docs/get-started/install)
+1. Install **Flutter 3.44.3** (this project pins that version; other versions may fail due to different Gradle/Kotlin plugin requirements)
 2. Clone the repository and run `flutter pub get`
 3. Build for your platform:
 
@@ -62,47 +53,7 @@ flutter build linux      # Linux
 flutter build macos      # macOS
 ```
 
-Android needs a signing key first — see "Android signing" in the next section.
-
-</details>
-
-<details>
-<summary><b>Building on your own GitHub</b></summary>
-
-After forking, you can produce installers with GitHub Actions without setting up a local toolchain.
-
-**1. Enable Actions**
-
-Workflows are disabled in a fresh fork. Open the Actions tab and enable them.
-
-**2. Build a single platform**
-
-Actions → **Build ALL** → Run workflow → pick `windows` / `linux` / `macos` / `ios` / `android` under platform. Download the result from that run's Artifacts.
-
-Windows, Linux, macOS and iOS build with no configuration, but the output is unsigned:
-
-- iOS produces an unsigned ipa; sign it yourself before sideloading.
-- macOS produces an unsigned, un-notarized dmg; right-click → Open the first time.
-
-**3. Android signing**
-
-Android requires your own signing key, otherwise the build fails outright. Generate one:
-
-```bash
-keytool -genkey -v -keystore venera.jks -keyalg RSA -keysize 2048 -validity 10000 -alias venera
-base64 -w0 venera.jks    # use base64 -i venera.jks on macOS
-```
-
-Add four secrets under Settings → Secrets and variables → Actions:
-
-| Name | Value |
-| --- | --- |
-| `ANDROID_KEYSTORE_BASE64` | output of the base64 command above |
-| `ANDROID_KEYSTORE_PASSWORD` | keystore password |
-| `ANDROID_KEY_ALIAS` | alias, `venera` in the example |
-| `ANDROID_KEY_PASSWORD` | key password |
-
-For local builds, put the same values in `android/key.properties` (the file is never committed):
+**Android signing:** when `android/key.properties` is absent, the build script falls back to the debug keystore (installable, but signed differently from the official builds). For a proper signature, write your signing info into `android/key.properties` (not committed):
 
 ```properties
 storeFile=/absolute/path/venera.jks
@@ -111,36 +62,15 @@ keyAlias=venera
 keyPassword=your key password
 ```
 
-**Note:** an APK you sign yourself has a different certificate from the released build, so it cannot be installed over it — you must uninstall first. Uninstalling erases app data, so export a backup from inside the app beforehand.
-
-**4. Repoint the update check**
-
-If you intend to distribute your builds, you must first edit the two constants at the top of [`lib/pages/settings/about.dart`](lib/pages/settings/about.dart):
-
-```dart
-const kUpdateRepoOwner = 'Kyosee';
-const kUpdateRepoName = 'VeneraX';
-```
-
-Change them to your own username and repository name. The update check, update-package download, changelog fetch, and the repository link on the About page all resolve through these.
-
-Leaving them unchanged has two consequences: on startup ("Check for updates on startup" is on by default) the app queries this repository's latest release, so your own releases are never detected; and on Windows, clicking "Update Now" installs this repository's build over yours, replacing your version with ours.
-
-**5. Tag-triggered releases (optional)**
-
-Pushing a `v*` tag builds every platform and creates a Release. Three things need attention in a fork:
-
-- `release-notes/<tag>.en.md` and `release-notes/<tag>.zh-CN.md` must exist and be non-empty.
-- The tag must equal `v` plus the version in `pubspec.yaml` (excluding anything after `+`).
-- The `Verify Android signature continuity` step compares the APK certificate against the previous Release. A fork has no previous Release, so this step always fails — and since Release depends on every platform build, one failure means no assets at all. Remove that step before your first release.
-
-Also: the two `Update_AltStore_*` jobs commit an AltStore manifest back to master and can be deleted if unused; private repos may never get an `ubuntu-22.04-arm` runner and queue forever, so `Build_Linux_ARM64` can be dropped there.
+**Windows build notes:** if the pub cache (usually on C:) and the project directory are on different drive roots, Kotlin incremental compilation may fail; this project sets `kotlin.incremental=false` in `android/gradle.properties` to avoid it. `android.overridePathCheck=true` is set for non-ASCII project paths.
 
 </details>
 
-## Migration
+## Migration & Coexistence
 
-If migrating from [venera-app/venera](https://github.com/venera-app/venera), use a separate WebDAV sync directory. Back up your old data before migrating.
+- This project has a different application ID from the official VeneraX, so both can be installed side by side with isolated app data.
+- To migrate data from VeneraX, use the in-app WebDAV backup/restore and choose a dedicated sync directory; do not share the directory with the official app.
+- Export a local backup in the original app before migrating.
 
 ## User Agreement & Disclaimer
 
@@ -195,13 +125,3 @@ This project has not established and does not operate any official community, gr
 1. Do not promote or advertise this project on any public or official platforms or official account areas (including but not limited to Weibo, WeChat Official Accounts, X, etc.).
 2. This software is licensed and distributed under the license set out in the LICENSE file at the root of the repository; this disclaimer does not modify or limit the rights granted by that license, and the license prevails in case of conflict.
 3. By downloading, copying, modifying, or using this project, you are deemed to have read and accepted this disclaimer in its entirety. The maintainers reserve the right to modify or supplement this disclaimer at any time, effective upon publication.
-
-## Star History
-
-<a href="https://www.star-history.com/?type=date&repos=Kyosee%2FVeneraX">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Kyosee/VeneraX&type=date&theme=dark&legend=top-left&sealed_token=t_CyvEveWN9HuG5CZb1KoUGGLxlcTA0a5341bBCAAV63Hh34aiVyEOvU9gpq1q9Wvcw48bzlVHPdlWQ5s-tz-bn9iq8_TBG0oU-Zk7CFAb_Pf7SqzE9J0eEazga6bCemssv2kIYq-9xlbymcG6S000iehp3Zs_TRV73aoOaEMv7pZP-qrRwaP6a7vuB1" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Kyosee/VeneraX&type=date&legend=top-left&sealed_token=t_CyvEveWN9HuG5CZb1KoUGGLxlcTA0a5341bBCAAV63Hh34aiVyEOvU9gpq1q9Wvcw48bzlVHPdlWQ5s-tz-bn9iq8_TBG0oU-Zk7CFAb_Pf7SqzE9J0eEazga6bCemssv2kIYq-9xlbymcG6S000iehp3Zs_TRV73aoOaEMv7pZP-qrRwaP6a7vuB1" />
-    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Kyosee/VeneraX&type=date&legend=top-left&sealed_token=t_CyvEveWN9HuG5CZb1KoUGGLxlcTA0a5341bBCAAV63Hh34aiVyEOvU9gpq1q9Wvcw48bzlVHPdlWQ5s-tz-bn9iq8_TBG0oU-Zk7CFAb_Pf7SqzE9J0eEazga6bCemssv2kIYq-9xlbymcG6S000iehp3Zs_TRV73aoOaEMv7pZP-qrRwaP6a7vuB1" />
-  </picture>
-</a>
