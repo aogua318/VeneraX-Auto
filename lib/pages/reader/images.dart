@@ -1085,18 +1085,35 @@ class _ContinuousModeState extends State<_ContinuousMode>
       'autoScrollOnChapterEnd',
     );
     if (behavior == 'nextChapter') {
-      if (reader.toNextChapter()) {
-        if (seamlessChapterReading) {
-          // Seamless mode jumps in place when the chapter is already loaded;
-          // restart once the scroll settles. An explicit jump to an unloaded
-          // chapter remounts this state, `mounted` guards that case.
-          Future.delayed(const Duration(milliseconds: 300), () {
-            if (mounted && !reader.isAutoScrolling) {
-              _startAutoScroll();
+      if (reader._nextVisibleChapter(1) != null) {
+        var changed = reader.toNextChapter();
+        if (changed) {
+          if (seamlessChapterReading) {
+            // Seamless mode jumps in place when the chapter is already loaded;
+            // restart once the scroll settles. An explicit jump to an unloaded
+            // chapter remounts this state, `mounted` guards that case.
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (mounted && !reader.isAutoScrolling) {
+                _startAutoScroll();
+              }
+            });
+          } else {
+            reader.autoScrollResumeAfterChapter = true;
+          }
+        } else {
+          // The next chapter exists but the jump failed (still loading).
+          // Never switch comics here; retry once the loading settles.
+          reader.autoScrollResumeAfterChapter = true;
+          Future.delayed(const Duration(milliseconds: 600), () {
+            if (!mounted || reader.isAutoScrolling) return;
+            if (reader.toNextChapter() && seamlessChapterReading) {
+              Future.delayed(const Duration(milliseconds: 300), () {
+                if (mounted && !reader.isAutoScrolling) {
+                  _startAutoScroll();
+                }
+              });
             }
           });
-        } else {
-          reader.autoScrollResumeAfterChapter = true;
         }
       } else {
         // No next chapter: continue with the next comic in the bookshelf.

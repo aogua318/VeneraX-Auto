@@ -554,13 +554,35 @@ class _ReaderState extends State<Reader>
     return map;
   }
 
+  /// Time of the last non-repeatable hardware key action, used to swallow
+  /// key auto-repeat (holding a gamepad/DPad button sends ACTION_DOWN events
+  /// with increasing repeat counts).
+  DateTime _lastChapterActionTime = DateTime.fromMillisecondsSinceEpoch(0);
+
+  static const _chapterActionMinInterval = Duration(milliseconds: 300);
+
   void handleHardwareKey(HardwareKey key) {
     var actionName = _inputKeyMap[key.id];
     if (actionName == null) return;
     var action = InputAction.tryParse(actionName);
-    if (action != null) {
-      handleInputAction(action);
+    if (action == null) return;
+    // Page turning and speed adjusting benefit from auto-repeat (hold to
+    // flip); chapter jumps and toggles must not repeat, or one long press
+    // walks over several chapters.
+    const repeatable = {
+      InputAction.nextPage,
+      InputAction.prevPage,
+      InputAction.increaseScrollSpeed,
+      InputAction.decreaseScrollSpeed,
+    };
+    if (!repeatable.contains(action)) {
+      var now = DateTime.now();
+      if (now.difference(_lastChapterActionTime) < _chapterActionMinInterval) {
+        return;
+      }
+      _lastChapterActionTime = now;
     }
+    handleInputAction(action);
   }
 
   void handleInputAction(InputAction action) {
@@ -645,88 +667,106 @@ class _ReaderState extends State<Reader>
   }
 
   /// Switch to the previous chapter. Falls back to the previous comic in the
-  /// bookshelf when there is no previous chapter.
+  /// bookshelf only when the comic really has no previous chapter — a failed
+  /// jump (the chapter is still loading) must never switch comics.
   @override
   Future<void> toPrevChapterOrComic({bool toLastPage = false}) async {
-    if (!toPrevChapter(toLastPage: toLastPage)) {
+    if (_nextVisibleChapter(-1) == null) {
       await toNeighborComic(false);
+      return;
     }
+    toPrevChapter(toLastPage: toLastPage);
   }
 
   /// Switch to the next chapter. Falls back to the next comic in the
-  /// bookshelf when there is no next chapter.
+  /// bookshelf only when the comic really has no next chapter.
   @override
   Future<void> toNextChapterOrComic() async {
-    if (!toNextChapter()) {
+    if (_nextVisibleChapter(1) == null) {
       await toNeighborComic(true);
+      return;
     }
+    toNextChapter();
   }
+
+  bool _switchingComic = false;
 
   /// Switch to the previous or next comic in the bookshelf. Returns false if
   /// the current comic is not in the bookshelf or there is no neighbor.
+  /// Reentrant calls are ignored so rapid key presses can not push several
+  /// reader routes.
   Future<bool> toNeighborComic(bool next) async {
-    var shelf = BookshelfManager().sortedItems();
-    var index = shelf.indexWhere((e) => e.id == cid && e.type == type);
-    if (index < 0) {
-      return false;
-    }
-    var targetIndex = next ? index + 1 : index - 1;
-    if (targetIndex < 0 || targetIndex >= shelf.length) {
-      showToast(
-        context: App.rootContext,
-        message: next ? "This is the last book".tl : "This is the first book".tl,
-      );
-      return false;
-    }
-    var entry = shelf[targetIndex];
-    var comic = entry.resolveComic();
-    if (comic == null) {
-      showToast(context: App.rootContext, message: "Comic not found".tl);
-      return false;
-    }
-    Widget page;
-    if (comic is LocalComic) {
-      var history = HistoryManager().find(comic.id, ComicType.local);
-      page = Reader(
-        type: ComicType.local,
-        cid: comic.id,
-        name: comic.title,
-        chapters: comic.chapters,
-        initialPage: history?.page,
-        initialChapter: history?.ep,
-        initialChapterGroup: history?.group,
-        history: history ?? History.fromModel(model: comic, ep: 0, page: 0),
-        author: comic.subTitle ?? '',
-        tags: comic.tags,
-      );
-    } else {
-      var source = entry.type.comicSource;
-      if (source?.loadComicInfo == null) {
+    if (_switchingComic) return false;
+    _switchingComic = true;
+    try {
+      var shelf = BookshelfManager().sortedItems();
+      var index = shelf.indexWhere((e) => e.id == cid && e.type == type);
+      if (index < 0) {
+        return false;
+      }
+      var targetIndex = next ? index + 1 : index - 1;
+      if (targetIndex < 0 || targetIndex >= shelf.length) {
+        showToast(
+          context: App.rootContext,
+          message:
+              next ? "This is the last book".tl : "This is the first book".tl,
+        );
+        return false;
+      }
+      var entry = shelf[targetIndex];
+      var comic = entry.resolveComic();
+      if (comic == null) {
         showToast(context: App.rootContext, message: "Comic not found".tl);
         return false;
       }
-      var res = await source!.loadComicInfo!(entry.id);
-      if (res.error) {
-        showToast(context: App.rootContext, message: res.errorMessage ?? "Error");
-        return false;
+      Widget page;
+      if (comic is LocalComic) {
+        var history = HistoryManager().find(comic.id, ComicType.local);
+        page = Reader(
+          type: ComicType.local,
+          cid: comic.id,
+          name: comic.title,
+          chapters: comic.chapters,
+          initialPage: history?.page,
+          initialChapter: history?.ep,
+          initialChapterGroup: history?.group,
+          history: history ?? History.fromModel(model: comic, ep: 0, page: 0),
+          author: comic.subTitle ?? '',
+          tags: comic.tags,
+        );
+      } else {
+        var source = entry.type.comicSource;
+        if (source?.loadComicInfo == null) {
+          showToast(context: App.rootContext, message: "Comic not found".tl);
+          return false;
+        }
+        var res = await source!.loadComicInfo!(entry.id);
+        if (res.error) {
+          showToast(
+              context: App.rootContext, message: res.errorMessage ?? "Error");
+          return false;
+        }
+        var details = res.data;
+        var history = HistoryManager().find(entry.id, entry.type);
+        page = Reader(
+          type: entry.type,
+          cid: entry.id,
+          name: details.title,
+          chapters: details.chapters,
+          initialPage: history?.page,
+          initialChapter: history?.ep,
+          initialChapterGroup: history?.group,
+          history:
+              history ?? History.fromModel(model: details, ep: 0, page: 0),
+          author: details.subTitle ?? '',
+          tags: details.tags.values.expand((e) => e).toList(),
+        );
       }
-      var details = res.data;
-      var history = HistoryManager().find(entry.id, entry.type);
-      page = Reader(
-        type: entry.type,
-        cid: entry.id,
-        name: details.title,
-        chapters: details.chapters,
-        initialPage: history?.page,
-        initialChapter: history?.ep,
-        initialChapterGroup: history?.group,
-        history: history ?? History.fromModel(model: details, ep: 0, page: 0),
-        author: details.subTitle ?? '',
-        tags: details.tags.values.expand((e) => e).toList(),
-      );
+      App.rootContext.toReplacement(() => page);
+      return true;
+    } finally {
+      _switchingComic = false;
     }
-    App.rootContext.toReplacement(() => page);
-    return true;
   }
 
   @override
