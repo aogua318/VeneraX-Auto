@@ -31,7 +31,10 @@ concurrency:
 jobs:
   Build_MacOS:
     runs-on: macos-15
-    if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'macos' }}
+    # Tag releases ship Android / Windows / Linux only; Apple builds are
+    # available through manual workflow_dispatch until their CI runners are
+    # stable enough to gate a release.
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.platform == 'all' || inputs.platform == 'macos') }}
     steps:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
@@ -89,7 +92,7 @@ jobs:
           path: result/
   Build_IOS:
     runs-on: macos-15
-    if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'ios' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.platform == 'all' || inputs.platform == 'ios') }}
     steps:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
@@ -341,20 +344,13 @@ jobs:
 
   Release:
     runs-on: ubuntu-22.04
-    needs: [Build_MacOS, Build_IOS, Build_Android, Build_Windows, Build_Linux, Build_Linux_ARM64]
+    needs: [Build_Android, Build_Windows, Build_Linux, Build_Linux_ARM64]
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
     outputs:
       prerelease: ${{ steps.release_meta.outputs.prerelease }}
+      has_ipa: ${{ steps.release_meta.outputs.has_ipa }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v8
-        with:
-          name: macos_build
-          path: outputs
-      - uses: actions/download-artifact@v8
-        with:
-          name: ios_build
-          path: outputs
       - uses: actions/download-artifact@v8
         with:
           name: apks
@@ -416,8 +412,6 @@ jobs:
               exit 1
             }
           }
-          require_asset 'release-assets/*.ipa'
-          require_asset 'release-assets/*.dmg'
           require_asset 'release-assets/*.apk'
           require_asset "release-assets/VeneraX-${version}.apk"
           require_asset 'release-assets/*.deb'
@@ -426,6 +420,11 @@ jobs:
              ! compgen -G 'release-assets/*.zip' > /dev/null; then
             echo "Missing Windows installer/archive"
             exit 1
+          fi
+          if compgen -G 'release-assets/*.ipa' > /dev/null; then
+            echo "has_ipa=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_ipa=false" >> "$GITHUB_OUTPUT"
           fi
           while IFS= read -r asset; do
             test -s "$asset" || { echo "Empty release asset: $asset"; exit 1; }
@@ -524,7 +523,7 @@ jobs:
     # AltStore users. (The in-app updater is safe by itself — GitHub's
     # releases/latest API never returns pre-releases — but this job would
     # otherwise overwrite the manifest with the beta.)
-    if: ${{ needs.Release.result == 'success' && needs.Release.outputs.prerelease == 'false' }}
+    if: ${{ needs.Release.result == 'success' && needs.Release.outputs.prerelease == 'false' && needs.Release.outputs.has_ipa == 'true' }}
     permissions:
       contents: write
     steps:
@@ -599,7 +598,7 @@ jobs:
   Update_AltStore_Beta_Source:
     runs-on: ubuntu-22.04
     needs: [Release]
-    if: ${{ needs.Release.result == 'success' && needs.Release.outputs.prerelease == 'true' }}
+    if: ${{ needs.Release.result == 'success' && needs.Release.outputs.prerelease == 'true' && needs.Release.outputs.has_ipa == 'true' }}
     permissions:
       contents: write
     steps:
