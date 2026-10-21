@@ -870,28 +870,16 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   var sliderFocus = FocusNode();
 
-  /// First page button. When already on the very first page of the comic,
-  /// switch to the previous comic in the bookshelf.
+  /// First page button. Matches the "First Page / Previous Chapter" hardware
+  /// action: go to the chapter's first page, then to the previous chapter.
   void _gotoFirstPage(_ReaderState reader) {
-    if (reader.isOnFirstPage) {
-      reader.toNeighborComic(false);
-    } else if (reader.chapter > 1) {
-      reader.toPrevChapter();
-    } else {
-      reader.toPage(1);
-    }
+    reader.toFirstPageOrPrevChapter();
   }
 
-  /// Last page button. When already on the very last page of the comic,
-  /// switch to the next comic in the bookshelf.
+  /// Last page button. Matches the "Last Page / Next Chapter" hardware action:
+  /// go to the chapter's last page, then to the next chapter.
   void _gotoLastPage(_ReaderState reader) {
-    if (reader.isOnLastPage) {
-      reader.toNeighborComic(true);
-    } else if (reader.chapter < reader.maxChapter) {
-      reader.toNextChapter();
-    } else {
-      reader.toPage(reader.maxPage);
-    }
+    reader.toLastPageOrNextChapter();
   }
 
   Widget buildSlider() {

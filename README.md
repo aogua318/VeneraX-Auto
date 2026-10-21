@@ -20,6 +20,7 @@ VeneraX Auto 是一个基于 VeneraX 的二次修改版，免费开源的多平�
 
 - [x] 平滑自动滚动：连续阅读模式下恒速滚动，速度按"每屏毫秒数"设定，支持触摸暂停/恢复、章末停止或续滚、屏幕常亮
 - [x] 外设按键映射（Android）：手柄 / DPAD / 键盘 / 媒体键（耳机线控）映射为翻页、翻章、开关自动滚动等阅读动作，支持自定义绑定
+- [x] 组合翻章：硬件按键新增“首页/上一章”“尾页/下一章”，底部首/尾页按钮采用同一逻辑——不在本章首页（尾页）时先回到首页（尾页），已在首页（尾页）时才切换上一章（下一章）
 - [x] 按键调速：映射"加快/减慢自动滚动"，每次 ±100ms 即时生效
 - [x] 下一页行为设置：整页跳转（页首对齐，点按/音量键/按键/定时翻页共用同一逻辑）或固定距离滚动（可设 10%–100% 屏高）
 - [x] 独立书架：与收藏夹并列的漫画列表，支持列表/网格/瀑布流三种视图与加入时间/名称/最近阅读排序
@@ -62,7 +63,7 @@ keyAlias=venera
 keyPassword=你的 key 密码
 ```
 
-**Windows 本机构建提示：** 若 pub 缓存（通常在 C 盘）与项目目录不在同一磁盘分区，Kotlin 增量编译可能失败，项目已在 `android/gradle.properties` 中设置 `kotlin.incremental=false` 规避；项目路径包含非 ASCII 字符时已设置 `android.overridePathCheck=true`。
+**Windows 本机构建提示：** 若 pub 缓存（通常在 C 盘）与项目目录不在同一磁盘分区，Kotlin 增量编译可能失败，项目已在 `android/gradle.properties` 中设置 `kotlin.incremental=false` 规避；`android.overridePathCheck=true` 只能跳过 Gradle 的路径检查，Flutter AOT 仍可能无法读取含中文等非 ASCII 路径下的 `app.dill`，请将源码放到纯 ASCII 路径后再构建。
 
 </details>
 

@@ -10,6 +10,8 @@ enum InputAction {
   toggleAutoScroll,
   nextChapter,
   prevChapter,
+  firstPageOrPrevChapter,
+  lastPageOrNextChapter,
   back,
   increaseScrollSpeed,
   decreaseScrollSpeed;
@@ -27,6 +29,8 @@ enum InputAction {
     toggleAutoScroll => "Toggle Auto Scroll",
     nextChapter => "Next Chapter",
     prevChapter => "Previous Chapter",
+    firstPageOrPrevChapter => "First Page / Previous Chapter",
+    lastPageOrNextChapter => "Last Page / Next Chapter",
     back => "Back",
     increaseScrollSpeed => "Increase Auto Scroll Speed",
     decreaseScrollSpeed => "Decrease Auto Scroll Speed",

@@ -2429,6 +2429,11 @@ class _ContinuousModeState extends State<_ContinuousMode>
     if (images == null || images.isEmpty) return false;
     final targetPage = toLastPage ? images.length : 1;
     reader.chapter = chapter;
+    // Keep reader.images aligned with reader.chapter: [_continuousEntries]
+    // adopts reader.images as the current chapter's pages on every rebuild,
+    // so a stale list here would overwrite the target chapter's images once a
+    // neighbouring chapter finishes loading.
+    reader.images = images;
     reader.page = targetPage;
     context.readerScaffold.update();
     final animate = reader.enablePageAnimation(reader.cid, reader.type);

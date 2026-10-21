@@ -604,6 +604,10 @@ class _ReaderState extends State<Reader>
         toNextChapterOrComic();
       case InputAction.prevChapter:
         toPrevChapterOrComic();
+      case InputAction.firstPageOrPrevChapter:
+        toFirstPageOrPrevChapter();
+      case InputAction.lastPageOrNextChapter:
+        toLastPageOrNextChapter();
       case InputAction.back:
         if (App.rootContext.canPop()) {
           App.rootContext.pop();
@@ -689,6 +693,26 @@ class _ReaderState extends State<Reader>
     toNextChapter();
   }
 
+  /// Go to the current chapter's first page; when already there, switch to the
+  /// previous chapter (or the previous comic at the very beginning).
+  void toFirstPageOrPrevChapter() {
+    if (page > 1) {
+      toPage(1);
+    } else {
+      toPrevChapterOrComic();
+    }
+  }
+
+  /// Go to the current chapter's last page; when already there, switch to the
+  /// next chapter (or the next comic at the very end).
+  void toLastPageOrNextChapter() {
+    if (page < maxPage) {
+      toPage(maxPage);
+    } else {
+      toNextChapterOrComic();
+    }
+  }
+
   bool _switchingComic = false;
 
   /// Switch to the previous or next comic in the bookshelf. Returns false if
@@ -771,22 +795,6 @@ class _ReaderState extends State<Reader>
 
   @override
   int get maxChapter => widget.chapters?.length ?? 1;
-
-  /// Whether the reader is on the very first page of the comic.
-  bool get isOnFirstPage => chapter == 1 && page == 1;
-
-  /// Whether the reader is on the very last page of the comic.
-  ///
-  /// In continuous mode the last page can not always be displayed fully, the
-  /// scroll position settles on the second-to-last page. Treat
-  /// `maxPage - 1` as the end in that case.
-  bool get isOnLastPage {
-    if (chapter != maxChapter) return false;
-    if (mode.isContinuous) {
-      return maxPage <= 1 ? page >= maxPage : page >= maxPage - 1;
-    }
-    return page == maxPage;
-  }
 
   /// 1-based chapters collapsed by this comic's "hide duplicate chapters"
   /// switch. Computed once: the switch lives on the details page, so it cannot

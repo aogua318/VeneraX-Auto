@@ -20,6 +20,7 @@ VeneraX Auto is a free and open-source, multi-platform comic reader based on Ven
 
 - [x] Smooth auto scroll: constant-speed scrolling in continuous reading mode, speed defined as milliseconds per screen, with touch pause/resume, chapter-end stop or continue, and keep-screen-on
 - [x] Hardware key mapping (Android): gamepad / DPAD / keyboard / media keys (headset controls) mapped to page turning, chapter switching, auto-scroll toggle and other reader actions, with custom bindings
+- [x] Combined chapter navigation: new "First Page / Previous Chapter" and "Last Page / Next Chapter" hardware actions, with the bottom first/last page buttons following the same two-step behavior — jump to the chapter's first/last page first, then switch chapter on the next press
 - [x] Key-bound speed control: "increase / decrease auto scroll speed" actions, ±100 ms per press, effective immediately
 - [x] Next-page behavior setting: page-aligned jump (tap / volume keys / hardware keys / timed turning all share one logic) or fixed-distance scroll (10%–100% of the viewport, configurable)
 - [x] Standalone bookshelf: a comic list alongside favorites, with list / grid / waterfall views and added-time / name / last-read sorting
@@ -62,7 +63,7 @@ keyAlias=venera
 keyPassword=your key password
 ```
 
-**Windows build notes:** if the pub cache (usually on C:) and the project directory are on different drive roots, Kotlin incremental compilation may fail; this project sets `kotlin.incremental=false` in `android/gradle.properties` to avoid it. `android.overridePathCheck=true` is set for non-ASCII project paths.
+**Windows build notes:** if the pub cache (usually on C:) and the project directory are on different drive roots, Kotlin incremental compilation may fail; this project sets `kotlin.incremental=false` in `android/gradle.properties` to avoid it. `android.overridePathCheck=true` only skips Gradle's path check; Flutter AOT can still fail to read `app.dill` under a non-ASCII project path, so build from an ASCII-only path.
 
 </details>
 
