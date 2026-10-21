@@ -125,7 +125,8 @@ jobs:
           channel: "stable"
           flutter-version-file: pubspec.yaml
           architecture: x64
-      - name: Verify Android signing secrets
+      - name: Check Android signing secrets
+        id: android_signing
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -133,11 +134,18 @@ jobs:
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
             set -euo pipefail
+            if [ -z "$KEYSTORE_BASE64" ] && [ -z "$KEYSTORE_PASSWORD" ] && [ -z "$KEY_ALIAS" ] && [ -z "$KEY_PASSWORD" ]; then
+              echo "enabled=false" >> "$GITHUB_OUTPUT"
+              echo "::warning::Android signing secrets are not configured; falling back to the debug keystore."
+              exit 0
+            fi
             test -n "$KEYSTORE_BASE64" || { echo "ANDROID_KEYSTORE_BASE64 secret is missing"; exit 1; }
             test -n "$KEYSTORE_PASSWORD" || { echo "ANDROID_KEYSTORE_PASSWORD secret is missing"; exit 1; }
             test -n "$KEY_ALIAS" || { echo "ANDROID_KEY_ALIAS secret is missing"; exit 1; }
             test -n "$KEY_PASSWORD" || { echo "ANDROID_KEY_PASSWORD secret is missing"; exit 1; }
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
       - name: Decode and install Android signing files
+        if: steps.android_signing.outputs.enabled == 'true'
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -160,7 +168,7 @@ jobs:
       - run: flutter pub get
       - run: flutter build apk --release
       - name: Verify Android signature continuity
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && steps.android_signing.outputs.enabled == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
