@@ -29,7 +29,8 @@ class _BookshelfPageState extends State<BookshelfPage> {
 
   Set<BookshelfItem> selected = {};
 
-  String get _sortMode => appdata.settings['bookshelfSortMode'];
+  String get _sortMode =>
+      appdata.settings['bookshelfSortMode'] ?? 'addedTime';
 
   void update() {
     if (mounted) {

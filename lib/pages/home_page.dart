@@ -1306,7 +1306,8 @@ class _ImportComicsWidgetState extends State<ImportComicsWidget> {
     // (Android only; no-op elsewhere). Started here, on the foreground tap, so
     // the foreground service isn't subject to background-start restrictions.
     // Empty status => the native service shows its localized default body under
-    // the localized "Importing comics" title; this flow has no per-item progress.
+    // the localized "Importing comics" title; per-comic progress is shown in
+    // the import dialog instead.
     BackgroundKeepAlive.instance.update(BackgroundKeepAlive.tagComicImport, '');
     var importer = ImportComic(
       selectedFolder: selectedFolder,

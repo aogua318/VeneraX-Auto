@@ -136,9 +136,11 @@ class BookshelfManager with ChangeNotifier {
     var items = List.of(_items);
     switch (mode) {
       case 'name':
-        items.sort((a, b) => a.title.compareTo(b.title));
+        items.sort(
+          (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
+        );
       case 'lastRead':
-        items.sort((a, b) => b.lastReadTime.compareTo(a.lastReadTime));
+        items.sort((a, b) => a.lastReadTime.compareTo(b.lastReadTime));
       case 'addedTime':
       default:
         items.sort((a, b) => a.addedAt.compareTo(b.addedAt));
