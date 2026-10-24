@@ -79,3 +79,7 @@ gh release create v2.3.4 build/app/outputs/flutter-apk/app-release.apk \
 - 手动上传不会更新 AltStore 清单，也没有 CI 的资产完整性与签名校验。
 - 本机 debug 签名与 CI/上一次发布不一致时，APK 无法覆盖安装。
 
+## 开发技能
+
+本机技能库位于 `E:\Skills库`。本项目推荐使用的技能、适配场景以及不适用清单见 [doc/recommended_skills.md](doc/recommended_skills.md)。技能只辅助开发流程，构建与发布仍以本文件为准。
+
